@@ -1,17 +1,18 @@
 # dev-hub Claude Code plugin
 
 Connects a Claude Code session in any consumer repo on vm-160 to the
-dev-hub dashboard. Bundles 32 MCP tools + seven workflow skills + six
-slash commands into one install.
+dev-hub dashboard. Bundles the dev-hub MCP tool surface + eight workflow
+skills + six slash commands into one install.
 
 ## What you get
 
 Once installed:
 
 - **MCP server `dev-hub`** auto-registered (HTTP transport, no auth, LAN-only).
+  Default endpoint: `http://192.168.86.160:8011/mcp` (prod stack).
 - **Skills auto-loaded:** `using-dev-hub`, `dev-hub-workflow`,
   `dev-hub-brainstorm`, `dev-hub-promote`, `close-out-plan`,
-  `dev-hub-init`, `dev-hub-doctor`.
+  `dev-hub-init`, `dev-hub-doctor`, `project-lifecycle`.
 - **Slash commands:** `/dev-hub-workflow`, `/dev-hub-brainstorm`,
   `/dev-hub-promote`, `/close-out-plan`, `/dev-hub-init`,
   `/dev-hub-doctor`.
@@ -22,18 +23,14 @@ Once installed:
 
 Claude Code only loads plugins that come from a **registered marketplace**
 and are enabled in `enabledPlugins` — a loose directory or symlink under
-`~/.claude/plugins/` is **not** discovered. This repo ships a local
-marketplace manifest at `.claude-plugin/marketplace.json` (repo root) that
-exposes the `plugin/` directory as the `dev-hub` plugin. Register it and
-install at **user scope** so every consumer project picks it up:
+`~/.claude/plugins/` is **not** discovered. Register the `claude-resources`
+marketplace (git URL) and install at **user scope** so every consumer
+project picks it up:
 
 ```bash
-claude plugin marketplace add /home/daniel/projects/dev-hub --scope user
-claude plugin install dev-hub@dev-hub-local --scope user
+claude plugin marketplace add https://forgejo.towneygorm.cc/daniel/claude-resources.git --scope user
+claude plugin install dev-hub@claude-resources --scope user
 ```
-
-(Equivalently, inside a Claude session: `/plugin marketplace add
-/home/daniel/projects/dev-hub` then `/plugin install dev-hub@dev-hub-local`.)
 
 Restart Claude Code (or start a new session) for the skills, commands, and
 MCP server to load — plugin changes apply on next session start, not live.
@@ -42,13 +39,14 @@ vm-160 with no per-project setup.
 
 ## Configure
 
-`DEV_HUB_MCP_URL` overrides the default `http://localhost:8001/mcp`:
+`DEV_HUB_MCP_URL` overrides the default `http://192.168.86.160:8011/mcp`:
 
 ```bash
 export DEV_HUB_MCP_URL=http://192.168.86.160:8001/mcp
 ```
 
-Not needed on vm-160 (localhost is the dev-hub host). Restart sessions
+The dev-hub app repo sets this to the dev stack (`8001`). In all other
+consumer repos the default prod URL (`8011`) is used. Restart sessions
 after changing.
 
 ## Verify
@@ -73,19 +71,21 @@ Expected: four ✓ (env var, /health, tools/list, list_projects).
 The orientation skill (`using-dev-hub`) loads automatically when you
 mention dev-hub in conversation; it explains the rest of the surface.
 
+The `project-lifecycle` skill covers the development/dev-vs-prod/release
+lifecycle and cross-repo feature conventions; it is advisory and surfaced
+by a SessionStart pointer.
+
 ## Update
 
-The install **copies** the plugin into a versioned cache
-(`~/.claude/plugins/cache/dev-hub-local/dev-hub/<version>/`) — it is *not*
+The install **copies** the plugin into a versioned cache — it is *not*
 a live view of the working tree, so a bare `git pull` does **not** update
 it. To ship plugin changes:
 
-1. Bump `version` in `plugin/.claude-plugin/plugin.json` (this happens in
-   lockstep with the repo's semver tag — see the repo's git-flow rule).
-2. Commit / `git pull` so the new version is on disk.
+1. Bump `version` in `.claude-plugin/plugin.json` inside the plugin directory.
+2. Push the changes to the `claude-resources` Forgejo repo.
 3. Refresh the marketplace catalogue and update the plugin:
    ```bash
-   claude plugin marketplace update dev-hub-local
+   claude plugin marketplace update claude-resources
    claude plugin update dev-hub
    ```
 4. Restart Claude Code to apply.
@@ -93,32 +93,32 @@ it. To ship plugin changes:
 ## Uninstall
 
 ```bash
-claude plugin uninstall dev-hub@dev-hub-local
+claude plugin uninstall dev-hub@claude-resources
 # optional: also drop the marketplace registration
-claude plugin marketplace remove dev-hub-local
+claude plugin marketplace remove claude-resources
 ```
 
 ## Versioning
 
-The plugin version (`.claude-plugin/plugin.json`) ships in lockstep with
-the dev-hub repo's semver tag, and the marketplace install pins that
-version into the cache. To pin an older release, `git checkout <tag>` in
-the dev-hub repo, then run the **Update** steps above.
+The plugin version (`.claude-plugin/plugin.json`) is pinned into the cache
+at install time. To pin an older release, check out the desired tag in the
+`claude-resources` repo, then run the **Update** steps above.
 
 ## Troubleshooting
 
 - **"Tool not found" calling `list_projects`** → plugin not loaded. Run
   `claude plugin reload` or restart the session.
 - **`/dev-hub-doctor` Check 2 fails** → dev-hub stack not running. On
-  vm-160: `docker compose up -d`.
+  vm-160: `docker compose up -d` in the dev-hub repo.
 - **`/dev-hub-doctor` Check 4 fails** → plugin loaded but tool surface
   missing. Verify the plugin is installed and enabled:
-  `claude plugin list` (expect `dev-hub@dev-hub-local … enabled`).
+  `claude plugin list` (expect `dev-hub@claude-resources … enabled`).
 - **Skills/commands don't appear at all** → the plugin isn't registered.
   A loose symlink under `~/.claude/plugins/` is ignored; run the
   marketplace install in the **Install** section, then restart the session.
 
 ## Source
 
-Lives in the dev-hub monorepo at `plugin/`. Bugs and PRs through the
-same Forgejo repo as the rest of the project.
+Lives in the `claude-resources` repo at `plugins/dev-hub/`. Bugs and PRs
+through the `claude-resources` Forgejo repo at
+`https://forgejo.towneygorm.cc/daniel/claude-resources`.
