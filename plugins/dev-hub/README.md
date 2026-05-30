@@ -15,8 +15,8 @@ Once installed:
 - **Slash commands:** `/dev-hub-workflow`, `/dev-hub-brainstorm`,
   `/dev-hub-promote`, `/close-out-plan`, `/dev-hub-init`,
   `/dev-hub-doctor`.
-- **Generated tool reference** at
-  `plugin/skills/using-dev-hub/_tool-reference.md`.
+- **Tool reference** discovered at runtime via the MCP `tools/list` handshake
+  (no bundled static copy).
 
 ## Install (one-time, vm-160)
 

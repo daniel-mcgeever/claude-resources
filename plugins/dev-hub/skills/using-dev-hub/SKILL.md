@@ -5,7 +5,7 @@ description: "Orient yourself to the dev-hub tool surface in a consumer repo. Na
 
 # Skill: using-dev-hub
 
-A pointer skill. The dev-hub MCP gives you **32 tools** for reading and
+A pointer skill. The dev-hub MCP gives you **a full set of tools** for reading and
 writing the dashboard's state. There are six workflow skills (each with
 a paired slash command) that wrap the most common loops.
 
@@ -31,9 +31,11 @@ a paired slash command) that wrap the most common loops.
 
 ## Tool reference
 
-See `_tool-reference.md` next to this skill for the full table of 32 tools
-grouped by family. That file is generated from the MCP server's tool
-registry — never edit by hand.
+The full tool surface is discovered at runtime — the MCP server is the source
+of truth. Call the MCP `tools/list` (it surfaces automatically when the plugin
+is connected) to see the current tools with live descriptions, or read the
+canonical grouped table in the dev-hub repo's `CLAUDE.md`. There is no static
+copy bundled in this skill, so it can never drift from the server.
 
 ## Tool-name prefix
 
