@@ -118,10 +118,11 @@ or re-read it as above. Do not print it.
 ## Step 3 — Create Forgejo repository
 
 ```bash
+BODY=$(python3 -c 'import json,sys; print(json.dumps({"name":sys.argv[1],"description":sys.argv[2],"private":True,"auto_init":False}))' "$SLUG" "$DESCRIPTION")
 curl -s -X POST http://192.168.86.160:3000/api/v1/user/repos \
   -H "Authorization: token ${FORGEJO_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{\"name\":\"${SLUG}\",\"description\":\"${DESCRIPTION}\",\"private\":true,\"auto_init\":false}"
+  -d "$BODY"
 ```
 
 - **200/201** → success. Capture `clone_url` from response.
@@ -205,6 +206,7 @@ Run locally on vm-160. The repo was created empty in Step 3, so push to the SSH
 remote using the host's deploy key — no token in the URL.
 
 ```bash
+set -e
 cd ~/projects/${SLUG}
 git init -b main
 git config user.name 'Daniel McGeevers'
@@ -235,7 +237,7 @@ After the call, look up the new project's id by querying the dev-hub REST API:
 
 ```bash
 DEV_HUB_ID=$(curl -sS http://localhost:8010/api/v1/projects \
-  | python3 -c "import json,sys; d=json.load(sys.stdin)['data']; items=d.get('items') or d; ids=[p['id'] for p in items if p['slug']=='${SLUG}']; print(ids[0] if ids else '')")
+  | python3 -c "import json,sys; d=json.load(sys.stdin)['data']; items=d.get('items') or d; ids=[p['id'] for p in items if p['slug']==sys.argv[1]]; print(ids[0] if ids else '')" "$SLUG")
 ```
 
 `DEV_HUB_ID` may be empty (dev-hub was down, or the project's path is
@@ -307,7 +309,7 @@ inside one Bash invocation so neither value crosses the agent transcript boundar
 ENVF=~/projects/claude-resources/.env
 REG_PW=$(grep -E '^REGISTRY_PASSWORD=' "$ENVF" | cut -d= -f2-)
 TOKEN=$(grep -E '^FORGEJO_API_TOKEN=' "$ENVF" | cut -d= -f2-)
-PAYLOAD=$(python3 -c 'import json,sys; print(json.dumps({"data": sys.argv[1]}))' "$REG_PW")
+PAYLOAD=$(printf '%s' "$REG_PW" | python3 -c 'import json,sys; print(json.dumps({"data": sys.stdin.read()}))')
 unset REG_PW
 curl -s -o /dev/null -w "HTTP=%{http_code}\n" -X PUT \
   -H "Authorization: token ${TOKEN}" -H "Content-Type: application/json" \
