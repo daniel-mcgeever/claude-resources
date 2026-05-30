@@ -345,7 +345,6 @@ Forgejo:  https://forgejo.towneygorm.cc/daniel/{{SLUG}}
 Launch:   ssh daniel@192.168.86.160
           cd ~/projects/{{SLUG}} && claude
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Reminder: Add REGISTRY_PASSWORD secret in Forgejo repo settings for CI image pushes
 ```
 
 ---
