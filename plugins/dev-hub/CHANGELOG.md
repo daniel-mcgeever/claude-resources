@@ -2,6 +2,21 @@
 
 All notable changes to the dev-hub Claude Code plugin.
 
+## [1.1.0] - 2026-05-30
+
+### Changed
+- Plugin now lives in the `claude-resources` marketplace hub (was bundled in the
+  dev-hub repo).
+- MCP coordinate defaults to the **prod** dev-hub over the LAN IP
+  (`192.168.86.160:8011`), overridable via `DEV_HUB_MCP_URL`.
+- `using-dev-hub` tool reference is now discovered at runtime; the static
+  `_tool-reference.md` snapshot was removed.
+
+### Added
+- `project-lifecycle` skill — the development/dev-vs-prod/release lifecycle and
+  the cross-repo feature conventions.
+- SessionStart hook surfacing an advisory pointer to `project-lifecycle`.
+
 ## [1.0.1] - 2026-05-29
 
 Prod-ready `mcp` + `frontend` images; no plugin behaviour change. The mcp
