@@ -2,6 +2,13 @@
 
 All notable changes to the dev-hub Claude Code plugin.
 
+## [1.2.0] - 2026-05-30
+
+### Added
+- `project-lifecycle` skill now covers env/config authoring: dev `.env` vs prod
+  `/srv/infra/stacks/<slug>/.env`, coordinate-as-config with the `.envrc`+direnv
+  dev-override, and secrets discipline. dev-hub as the worked example.
+
 ## [1.1.1] - 2026-05-30
 
 ### Fixed

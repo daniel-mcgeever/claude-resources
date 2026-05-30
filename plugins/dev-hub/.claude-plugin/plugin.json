@@ -1,6 +1,6 @@
 {
   "name": "dev-hub",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Claude Code plugin for dev-hub: MCP connection + workflow skills for picking up dev-hub-tracked work in any consumer repo on vm-160.",
   "author": { "name": "Daniel McGeevers", "email": "dmcg2448@gmail.com" },
   "homepage": "https://forgejo.towneygorm.cc/daniel/claude-resources",

@@ -59,3 +59,14 @@ App rollback is instant (redeploy the previous pinned tag). Plugin rollback is a
 revert-commit + consumers re-updating — low risk, since plugin changes are mostly
 additive skill text. Shared cross-project skill changes get their own PR,
 independent of any single feature.
+
+## Env / config authoring
+
+A project's configuration is split dev vs prod, **externalized — never baked into the image**:
+
+- **Dev**: a gitignored `.env` at the repo root (copied from `.env.example`), consumed by the dev compose stack (`env_file: .env`, bind-mounted source). Local DB creds, ports, dev backend URLs.
+- **Prod**: `/srv/infra/stacks/<slug>/.env` on vm-160, holding `APP_VERSION` (the pinned image tag) + prod values, updated by `prod-deploy`. Never in the repo.
+
+**Coordinate-as-config.** If the project talks to a backend with a dev/prod split (its own, or dev-hub), express the URL as an env var with a prod-safe default — e.g. `${DEV_HUB_MCP_URL:-http://192.168.86.160:8011/mcp}`, or the project's own `${FOO_API_URL:-<prod>}`. Prod is the default everyone gets; **dev is a deliberate per-repo override**: a tracked `.envrc` exporting the dev URL + `direnv` (the var is read at session launch, so start `claude` from inside the repo). dev-hub is the worked example — its `.envrc` points `DEV_HUB_MCP_URL` at the dev stack so working *on* dev-hub hits dev, while every consumer defaults to prod.
+
+**Secrets discipline.** Secrets live in `.env` (gitignored, `chmod 600`), are sourced never printed, and never cross the agent transcript — assign to a shell var in one Bash call and use it. Never commit a `.env`; never pass a secret on argv.
