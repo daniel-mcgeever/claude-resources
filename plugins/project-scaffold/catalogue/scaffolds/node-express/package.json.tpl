@@ -1,0 +1,18 @@
+{
+  "name": "{{SLUG}}",
+  "version": "0.1.0",
+  "description": "{{DESCRIPTION}}",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "test": "node --test src/**/*.test.js"
+  },
+  "dependencies": {
+    "express": "^4.21"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
