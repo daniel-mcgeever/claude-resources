@@ -10,6 +10,11 @@
       "name": "dev-hub",
       "source": "./plugins/dev-hub",
       "description": "Claude Code plugin for dev-hub: MCP connection + workflow skills for picking up dev-hub-tracked work in any consumer repo."
+    },
+    {
+      "name": "project-scaffold",
+      "source": "./plugins/project-scaffold",
+      "description": "Scaffold a new development project on vm-160 (Forgejo repo + .claude/ from catalogue + dev-hub registration)."
     }
   ]
 }
