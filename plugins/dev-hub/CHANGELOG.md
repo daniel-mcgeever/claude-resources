@@ -2,6 +2,13 @@
 
 All notable changes to the dev-hub Claude Code plugin.
 
+## [1.1.1] - 2026-05-30
+
+### Fixed
+- `dev-hub-doctor` skill referenced the old dev default (`localhost:8001`), the
+  retired symlink install path, and a hardcoded tool count — updated to the prod
+  LAN-IP default, the marketplace install check, and a count-agnostic description.
+
 ## [1.1.0] - 2026-05-30
 
 ### Changed

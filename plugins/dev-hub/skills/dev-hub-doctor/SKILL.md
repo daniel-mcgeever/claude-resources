@@ -10,7 +10,7 @@ Run all four checks. Report each ✓ or ✗ with the fix inline.
 ## Check 1 — env var present
 
 ```bash
-echo "DEV_HUB_MCP_URL=${DEV_HUB_MCP_URL:-<unset; defaults to http://localhost:8001/mcp>}"
+echo "DEV_HUB_MCP_URL=${DEV_HUB_MCP_URL:-<unset; defaults to http://192.168.86.160:8011/mcp (prod); DEV_HUB_MCP_URL overrides it>}"
 ```
 
 Unset is fine for vm-160 (default works). Note the value either way.
@@ -33,14 +33,14 @@ If it errors:
 ## Check 3 — MCP tools/list handshake
 
 ```bash
-curl -sS -X POST "${DEV_HUB_MCP_URL:-http://localhost:8001/mcp}" \
+curl -sS -X POST "${DEV_HUB_MCP_URL:-http://192.168.86.160:8011/mcp}" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
   | head -c 4000
 ```
 
-Expected: JSON or SSE response listing the 32 tools.
+Expected: JSON or SSE response listing the dev-hub tools.
 
 If it errors:
 - **connection refused** → mcp container isn't serving (different from Check 2 failure if the backend is up but mcp isn't). On vm-160: `docker compose up -d mcp`.
@@ -52,8 +52,12 @@ Attempt `list_projects` via the MCP tool surface. If you get
 `tool not found`, the plugin isn't loaded in this Claude session.
 
 Remediation:
-- Verify `~/.claude/plugins/dev-hub` exists and resolves to
-  `/home/daniel/projects/dev-hub/plugin` (one-time install).
+- Verify the plugin is installed from the marketplace — `claude plugin list`
+  (expect `dev-hub@claude-resources … enabled`). If missing, re-run:
+  ```bash
+  claude plugin marketplace add https://forgejo.towneygorm.cc/daniel/claude-resources.git --scope user
+  claude plugin install dev-hub@claude-resources --scope user
+  ```
 - Restart the Claude session OR run `claude plugin reload` if it's
   installed but not yet loaded.
 
