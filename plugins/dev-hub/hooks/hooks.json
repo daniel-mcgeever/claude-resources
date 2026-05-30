@@ -1,4 +1,5 @@
 {
+  "description": "dev-hub plugin — SessionStart advisory pointing plugin/skill authors at the project-lifecycle skill.",
   "hooks": {
     "SessionStart": [
       {

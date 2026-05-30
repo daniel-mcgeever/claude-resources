@@ -49,7 +49,7 @@ in claude-resources) and cross-reference the two PRs. Five rules keep it safe:
 
 Register claude-resources as a **local-path** marketplace (`claude plugin
 marketplace add ~/projects/claude-resources --scope local`) to test your working
-tree privately — skill edits live, `/reload-plugins` for the rest. Consumers,
+tree privately (`--scope local` keeps it private to the current project; consumers use the permanent `--scope user` git-URL install) — skill edits live, `/reload-plugins` for the rest. Consumers,
 pinned to the git-URL install of `main`, see nothing until you merge and they
 update.
 
