@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "dev-hub": {
+      "type": "http",
+      "url": "${DEV_HUB_MCP_URL:-http://localhost:8001/mcp}"
+    }
+  }
+}
