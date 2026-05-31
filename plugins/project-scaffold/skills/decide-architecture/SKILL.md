@@ -26,7 +26,7 @@ Turn an understood concept into concrete, **recorded** architecture and stack de
 
 ## The flow
 
-1. **Load context.** Read `/home/daniel/projects/.scaffold-drafts/<slug>/concept-brief.md` first. Build on it; don't re-litigate the idea. If the brief is **missing**, stop and send the user back to `explore-project-idea` rather than inventing the concept from memory — the brief is the source of truth, not the chat prompt. If it appears mid-session, re-read it.
+1. **Load context.** Read `~/projects/scaffold-drafts/<slug>/concept-brief.md` first (the Forgejo-backed staging repo; clone it if `~/projects/scaffold-drafts` is missing — see "The artifact"). Build on it; don't re-litigate the idea. If the brief is **missing**, stop and send the user back to `explore-project-idea` rather than inventing the concept from memory — the brief is the source of truth, not the chat prompt. If it appears mid-session, re-read it.
 2. **List the decisions that actually need making** for *this* project. Classify each:
    - **One-way door** (hard/expensive to reverse: core model strategy, primary datastore, runtime/deployment shape) → research deeply, decide now.
    - **Two-way door** (cheap to change later: a helper lib, a UI detail) → keep light, or defer explicitly.
@@ -44,13 +44,28 @@ Models, SDKs, and frameworks move faster than your training cutoff. For every ca
 
 ## The artifact
 
-One file per decision (the project dir doesn't exist yet):
+ADRs live in the same **Forgejo-backed staging repo** as the concept brief
+(`daniel/scaffold-drafts`, cloned at `~/projects/scaffold-drafts`). One file per
+decision:
 
 ```
-/home/daniel/projects/.scaffold-drafts/<slug>/decisions/adr-NNN-<short-slug>.md
+~/projects/scaffold-drafts/<slug>/decisions/adr-NNN-<short-slug>.md
 ```
 
-`NNN` is zero-padded sequence (001, 002, …). Use `references/adr-template.md`. `new-project` folds this whole `decisions/` directory into the project's `docs/decisions/` on scaffold.
+`NNN` is zero-padded sequence (001, 002, …). Use `references/adr-template.md`.
+
+**Pull before writing**, then commit + push so they're readable in the webapp:
+```bash
+git -C ~/projects/scaffold-drafts pull --rebase          # other sessions may have pushed
+cd ~/projects/scaffold-drafts && git add <slug>/ \
+  && git commit -m "idea(<slug>): architecture decisions" && git push
+```
+Then give the user the webapp link to the decisions:
+`https://forgejo.towneygorm.cc/daniel/scaffold-drafts/src/branch/main/<slug>/decisions`.
+
+On scaffold, `new-project` ports these ADRs into a **dev-hub plan** linked to the
+new project (and the brief into dev-hub thoughts), then removes the `<slug>`
+folder from this repo — so a folder here always means *an idea not yet built*.
 
 ## Handoff
 
@@ -68,7 +83,7 @@ When ADRs are written, summarize for `new-project`:
 | Recommending from memory | Web-verify currency; record the date + link. |
 | Deciding everything up front | Defer two-way-door calls; mark them deferred, not decided. |
 | No "revisit if" trigger | Each ADR names what would reopen it — loose scope means decisions will move. |
-| Reasoning lives only in chat | Always write the ADR files. |
+| Reasoning lives only in chat | Always write the ADR files AND push them to scaffold-drafts. |
 | Re-debating the idea | The brief settled *what*; you decide *how*. |
 | Gold-plating the ADRs | Keep each to ~1 page; past ~6–8 ADRs you're likely over-deciding — defer more. |
 

@@ -34,8 +34,13 @@ Re-run the same scenario with this skill available. Success criteria:
 - Stays in the problem space; defers stack/architecture explicitly.
 - Runs web research and cites findings with dates.
 - Holds 2–3 framings until the user chooses.
-- Writes `concept-brief.md` to the staging path.
+- Writes `concept-brief.md` to `~/projects/scaffold-drafts/<slug>/` AND commits + pushes it.
+- Gives the user the Forgejo webapp link to the pushed brief.
 - Offers handoff to decide-architecture.
+
+(Updated 2026-05-31: drafts moved from a local-only dir to the Forgejo-backed
+`scaffold-drafts` repo so they're readable in the webapp. GREEN must now confirm
+the commit + push, not just the file write.)
 
 ## REFACTOR
 

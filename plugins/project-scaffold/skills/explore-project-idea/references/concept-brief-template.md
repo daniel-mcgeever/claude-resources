@@ -1,7 +1,7 @@
 # Concept Brief — <Working Name>
 
 > Status: draft · Last updated: <YYYY-MM-DD>
-> Staging path: /home/daniel/projects/.scaffold-drafts/<slug>/concept-brief.md
+> Staging path: ~/projects/scaffold-drafts/<slug>/concept-brief.md (Forgejo: daniel/scaffold-drafts)
 
 ## Problem / motivation
 What hurts today? Why is this worth building?

@@ -67,7 +67,7 @@ Do NOT proceed past this step until the plugin reports `INSTALLED`.
 
 ## Step 1 — Gather inputs
 
-**First, check for a staging draft from the ideation skills.** If `~/projects/.scaffold-drafts/<slug>/` exists, read its `concept-brief.md` and/or `decisions/adr-*.md` and use them to pre-fill `DESCRIPTION` (from the brief) and `TECH_STACK` (from the accepted ADRs) — confirm with Daniel rather than asking from scratch, and honor any decision marked *deferred*. Step 4 folds these files into the project's `docs/`. If no draft exists, gather inputs as below.
+**First, check for a staging draft from the ideation skills.** Drafts live in the Forgejo-backed repo `daniel/scaffold-drafts`, cloned at `~/projects/scaffold-drafts`. If `~/projects/scaffold-drafts/<slug>/` exists, read its `concept-brief.md` and/or `decisions/adr-*.md` and use them to pre-fill `DESCRIPTION` (from the brief) and `TECH_STACK` (from the accepted ADRs) — confirm with Daniel rather than asking from scratch, and honor any decision marked *deferred*. (If `~/projects/scaffold-drafts` isn't cloned but you expect a draft: `git clone ssh://git@forgejo.towneygorm.cc:222/daniel/scaffold-drafts.git ~/projects/scaffold-drafts` then `git -C ~/projects/scaffold-drafts pull`.) Remember the slug — **Step 6.7** ports the draft into dev-hub and removes it from the drafts repo. If no draft exists, gather inputs as below.
 
 Ask Daniel for:
 
@@ -143,17 +143,12 @@ mkdir -p ~/projects/${SLUG}/.claude/agents \
          ~/projects/${SLUG}/.claude/rules \
          ~/projects/${SLUG}/.forgejo/workflows \
          ~/projects/${SLUG}/src
-
-# If the project came through the ideation skills, a staging draft exists.
-# Fold it into the project's docs/ so the idea + architecture rationale ship with the code.
-DRAFT=~/projects/.scaffold-drafts/${SLUG}
-if [ -d "$DRAFT" ]; then
-  mkdir -p ~/projects/${SLUG}/docs
-  [ -f "$DRAFT/concept-brief.md" ] && mv "$DRAFT/concept-brief.md" ~/projects/${SLUG}/docs/
-  [ -d "$DRAFT/decisions" ] && mv "$DRAFT/decisions" ~/projects/${SLUG}/docs/decisions
-  rmdir "$DRAFT" 2>/dev/null || true
-fi
 ```
+
+> Ideation drafts are **not** copied into the project's `docs/`. They are ported
+> into dev-hub (plan + thoughts) and removed from the drafts repo in **Step 6.7**,
+> after the project is registered in dev-hub. The repo gets only a one-line
+> pointer in `CLAUDE.md` (also Step 6.7).
 
 ---
 
@@ -257,6 +252,49 @@ DEV_HUB_ID=$(curl -sS http://localhost:8010/api/v1/projects \
 `DEV_HUB_ID` may be empty (dev-hub was down, or the project's path is
 outside the REPOS mount). Step 9 writes whatever you got, including
 empty.
+
+---
+
+## Step 6.7 — Port ideation draft into dev-hub (only if a draft was used)
+
+If Step 1 found a draft at `~/projects/scaffold-drafts/<slug>/`, port the thinking
+into the dev-hub dashboard now (the project exists in dev-hub after Step 6.5), then
+retire the draft. **This is the canonical home for the rationale after build** — the
+project repo gets only a pointer, not copied markdown.
+
+Order matters and the delete is gated on success — **never remove the draft until the
+dev-hub writes have succeeded**, or you'll lose the ideation with nowhere to read it.
+
+1. **ADRs → a dev-hub plan**, linked to the project. Concatenate the `decisions/adr-*.md`
+   bodies into one plan body and call (via the dev-hub MCP):
+   ```
+   create_plan(
+     project_slug=<slug>,
+     title="Architecture decisions (from ideation)",
+     body_md=<concatenated ADRs>,
+   )
+   ```
+2. **Concept brief → dev-hub thoughts.** Seed the brief's key points as typed thoughts —
+   one per salient line — so they're searchable in the dashboard:
+   ```
+   create_thought(project_slug=<slug>, text=<...>, kind=decision|concern|question|idea|note)
+   ```
+   Map: settled choices → `decision`; open questions → `question`; constraints/risks → `concern`.
+   Keep it to the handful that matter; don't transcribe the whole brief.
+3. **Pointer in CLAUDE.md.** Append a line to `~/projects/${SLUG}/CLAUDE.md`:
+   `> Ideation: see the "Architecture decisions (from ideation)" plan + thoughts in dev-hub.`
+   Commit it with the project's git (or fold into the Step 6 commit if you reorder).
+4. **Only after 1–3 succeed**, remove the draft from the drafts repo and push:
+   ```bash
+   cd ~/projects/scaffold-drafts
+   git rm -r <slug>/
+   git commit -m "scaffold(<slug>): ported to dev-hub, project created"
+   git push
+   ```
+
+If the dev-hub MCP is unreachable, **skip this step** — leave the draft in
+`scaffold-drafts` untouched and tell Daniel the port is pending so he can re-run it
+later. A draft folder remaining means "not yet ported," which is the safe state.
 
 ---
 
