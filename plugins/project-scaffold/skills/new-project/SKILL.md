@@ -10,6 +10,8 @@ description: "Scaffold a new development project on vm-160 — runs natively on 
 Use when Daniel wants to create a new development project, app, or service on vm-160.
 Run this from any session on vm-160. Result: a ready-to-build project, registered in dev-hub.
 
+**Loose or fuzzy scope?** Don't force the design here. Run `project-scaffold:explore-project-idea` (shape the idea conversationally) and `project-scaffold:decide-architecture` (choose + record the stack as ADRs) first — they leave a draft this skill picks up automatically (Step 1).
+
 ---
 
 ## Prerequisites
@@ -64,6 +66,8 @@ Do NOT proceed past this step until the plugin reports `INSTALLED`.
 ---
 
 ## Step 1 — Gather inputs
+
+**First, check for a staging draft from the ideation skills.** If `~/projects/.scaffold-drafts/<slug>/` exists, read its `concept-brief.md` and/or `decisions/adr-*.md` and use them to pre-fill `DESCRIPTION` (from the brief) and `TECH_STACK` (from the accepted ADRs) — confirm with Daniel rather than asking from scratch, and honor any decision marked *deferred*. Step 4 folds these files into the project's `docs/`. If no draft exists, gather inputs as below.
 
 Ask Daniel for:
 
@@ -139,6 +143,16 @@ mkdir -p ~/projects/${SLUG}/.claude/agents \
          ~/projects/${SLUG}/.claude/rules \
          ~/projects/${SLUG}/.forgejo/workflows \
          ~/projects/${SLUG}/src
+
+# If the project came through the ideation skills, a staging draft exists.
+# Fold it into the project's docs/ so the idea + architecture rationale ship with the code.
+DRAFT=~/projects/.scaffold-drafts/${SLUG}
+if [ -d "$DRAFT" ]; then
+  mkdir -p ~/projects/${SLUG}/docs
+  [ -f "$DRAFT/concept-brief.md" ] && mv "$DRAFT/concept-brief.md" ~/projects/${SLUG}/docs/
+  [ -d "$DRAFT/decisions" ] && mv "$DRAFT/decisions" ~/projects/${SLUG}/docs/decisions
+  rmdir "$DRAFT" 2>/dev/null || true
+fi
 ```
 
 ---
