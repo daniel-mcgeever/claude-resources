@@ -13,6 +13,20 @@ Turn an understood concept into concrete, **recorded** architecture and stack de
 
 **Core principle:** Decide what must be decided now, research it against today's reality, and write down *why* — including the alternatives you rejected and the trigger that would reopen the call. Don't decide what you don't have to yet.
 
+## Shared homelab infrastructure — default these (don't re-decide)
+
+If the project needs a **relational database, object storage, or auth**, it uses the shared homelab
+services by **default**, sectioned off per app — read **`references/shared-infrastructure.md`** before
+deciding:
+
+- **Database →** shared PostgreSQL cluster, **one database + role per app** (recursive CTEs + JSONB available).
+- **Object storage →** **Garage** (S3-compatible), **one bucket + scoped key per app**. (Not MinIO — its OSS edition was archived in 2026.)
+- **Auth →** **Authentik** (OIDC), **one client per app** + Application Entitlements for roles.
+
+These are pre-decided; **only write an ADR for these areas if you DEVIATE** (e.g. an app needing its own
+Postgres for an incompatible extension, or native WORM object storage). Don't reach for bundled platforms
+(e.g. Supabase) that couple the API surface, keys, and auth pool at the instance level.
+
 ## When to use
 
 - A concept brief (or clear shared understanding) exists; it's time to choose the stack/shape.

@@ -12,6 +12,13 @@ Run this from any session on vm-160. Result: a ready-to-build project, registere
 
 **Loose or fuzzy scope?** Don't force the design here. Run `project-scaffold:explore-project-idea` (shape the idea conversationally) and `project-scaffold:decide-architecture` (choose + record the stack as ADRs) first — they leave a draft this skill picks up automatically (Step 1).
 
+**Needs a database, object storage, or auth?** It uses the **shared homelab infrastructure** by default
+(Postgres database-per-app · Garage bucket-per-app · Authentik OIDC client-per-app). Read
+**`plugins/project-scaffold/references/shared-infrastructure.md`** (relative: `../../references/shared-infrastructure.md`):
+the per-app "section" (DB+role, bucket+key, OIDC client) is provisioned by the **vm-153 infra-manager**,
+and the app's `.env` / `.env.example` use the standard `DATABASE_URL` / `S3_*` / `OIDC_*` vars from that
+reference. Don't stand up a per-app database/bucket/IdP unless an ADR records a deliberate deviation.
+
 ---
 
 ## Prerequisites
