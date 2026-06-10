@@ -21,6 +21,12 @@
   even *connect* to another app's data (CONNECT is checked before any schema/table privilege). This is
   database-per-app, **not** schema-per-app (schema-per-app has no DB-level enforcement).
 - Recursive CTEs + JSONB are core Postgres — available to every app, no extension needed.
+- **Cluster image:** `pgvector/pgvector:pg17` (Postgres 17 with the `pgvector` extension *available*) — so
+  any app can later add vector/embedding search. Extensions are enabled **per-database** by the
+  infra-manager (superuser-gated; a per-app role can't self-enable), so this does **not** affect app
+  isolation. (`VectorChord` / `tensorchord/vchord-postgres` is the drop-in upgrade path if an app ever
+  outgrows pgvector at scale.) Pin the tag (PG minor ≥ the running one — never a downgrade); keep dev and
+  prod on the same image.
 - **Connect through PgBouncer.** In transaction-pooling mode, server-side prepared statements need care:
   `node-postgres` is fine (off by default); with **`postgres.js` set `prepare: false`** (or run
   PgBouncer ≥ 1.21 with `max_prepared_statements > 0`).
