@@ -77,9 +77,9 @@ cd ~/projects/scaffold-drafts && git add <slug>/ \
 Then give the user the webapp link to the decisions:
 `https://forgejo.towneygorm.cc/daniel/scaffold-drafts/src/branch/main/<slug>/decisions`.
 
-On scaffold, `new-project` ports these ADRs into a **dev-hub plan** linked to the
-new project (and the brief into dev-hub thoughts), then removes the `<slug>`
-folder from this repo — so a folder here always means *an idea not yet built*.
+On scaffold, `new-project` ports these ADRs into the new repo's `docs/decisions/`
+(and the brief into `docs/`), then removes the `<slug>` folder from this repo — so a
+folder here always means *an idea not yet built*.
 
 ## Handoff
 

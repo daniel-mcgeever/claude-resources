@@ -14,7 +14,7 @@
     {
       "name": "project-scaffold",
       "source": "./plugins/project-scaffold",
-      "description": "Scaffold a new development project on vm-160 (Forgejo repo + .claude/ from catalogue + dev-hub registration)."
+      "description": "Scaffold a new development project on vm-160 (Forgejo repo + .claude/ from catalogue), plus promote-skill for sharing skills into the central library."
     }
   ]
 }

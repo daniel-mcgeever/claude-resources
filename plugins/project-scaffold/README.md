@@ -1,8 +1,8 @@
 # project-scaffold
 
 Scaffolds a new development project on vm-160: Forgejo repo, `CLAUDE.md` + `.claude/`
-from the bundled `catalogue/`, git init/push, optional prod compose stack, and
-dev-hub registration. Runs natively on vm-160.
+from the bundled `catalogue/`, git init/push, and an optional prod compose stack.
+Runs natively on vm-160.
 
 ## Install (vm-160, user scope)
 
@@ -38,7 +38,15 @@ unset TOKEN REGPW
 
 Never commit `.env`; never print the values.
 
+## Sharing skills across projects
+
+`Skill(promote-skill)` copies a skill you authored in any project's `.claude/skills/`
+into the central `skills/` library at the claude-resources repo root (indexed in
+`skills/INDEX.md`), so other projects can find and reuse it. Logic:
+`skills/promote-skill/SKILL.md`.
+
 ## Source
 
 Lives in the claude-resources repo at `plugins/project-scaffold/`. Project templates
-are in `catalogue/`; the scaffolder logic is `skills/new-project/SKILL.md`.
+are in `catalogue/`; the scaffolder logic is `skills/new-project/SKILL.md`. The central
+shared-skill library is at the repo root in `skills/`.

@@ -1,6 +1,6 @@
 ---
 name: new-project
-description: "Scaffold a new development project on vm-160 — runs natively on the host. Creates the Forgejo repo, the project dir + CLAUDE.md + .claude/ from the bundled catalogue, git init/push, optional prod compose stack, and registers the project in prod dev-hub. Triggers: 'create a new project', 'scaffold a project', 'set up a new dev project', 'new-project'."
+description: "Scaffold a new development project on vm-160 — runs natively on the host. Creates the Forgejo repo, the project dir + CLAUDE.md + .claude/ from the bundled catalogue, git init/push, and an optional prod compose stack. Triggers: 'create a new project', 'scaffold a project', 'set up a new dev project', 'new-project'."
 ---
 
 # Skill: new-project — Project Scaffolding
@@ -8,7 +8,7 @@ description: "Scaffold a new development project on vm-160 — runs natively on 
 ## When to use this skill
 
 Use when Daniel wants to create a new development project, app, or service on vm-160.
-Run this from any session on vm-160. Result: a ready-to-build project, registered in dev-hub.
+Run this from any session on vm-160. Result: a ready-to-build project pushed to Forgejo.
 
 **Loose or fuzzy scope?** Don't force the design here. Run `project-scaffold:explore-project-idea` (shape the idea conversationally) and `project-scaffold:decide-architecture` (choose + record the stack as ADRs) first — they leave a draft this skill picks up automatically (Step 1).
 
@@ -25,7 +25,6 @@ reference. Don't stand up a per-app database/bucket/IdP unless an ADR records a 
 
 - You are running on **vm-160** (the dev host) in any Claude session with this plugin installed.
 - The tooling secrets file exists: `~/projects/claude-resources/.env` (mode 600, gitignored) with `FORGEJO_API_TOKEN` and `REGISTRY_PASSWORD`. If missing, halt and tell Daniel to stage it (see the project-scaffold README).
-- The dev-hub plugin is installed (Step 0.5 verifies this).
 
 ### One-time secret setup (if `~/projects/claude-resources/.env` is missing)
 
@@ -49,32 +48,9 @@ it is gitignored before proceeding.
 
 ---
 
-## Step 0.5 — Verify the dev-hub plugin is installed on vm-160
-
-Before any scaffolding, confirm the dev-hub plugin is installed on the
-target host. New projects depend on it being there. The plugin is installed
-from the **claude-resources** marketplace (not a symlink — that mechanism is
-retired).
-
-```bash
-claude plugin list 2>/dev/null | grep -q 'dev-hub@claude-resources' && echo INSTALLED || echo MISSING
-```
-
-Expected: prints `INSTALLED`.
-
-If `MISSING`, halt with:
-
-> "dev-hub plugin not installed. One-time setup needed:
-> `claude plugin marketplace add https://forgejo.towneygorm.cc/daniel/claude-resources.git --scope user && claude plugin install dev-hub@claude-resources --scope user`.
-> Re-run new-project after installing."
-
-Do NOT proceed past this step until the plugin reports `INSTALLED`.
-
----
-
 ## Step 1 — Gather inputs
 
-**First, check for a staging draft from the ideation skills.** Drafts live in the Forgejo-backed repo `daniel/scaffold-drafts`, cloned at `~/projects/scaffold-drafts`. If `~/projects/scaffold-drafts/<slug>/` exists, read its `concept-brief.md` and/or `decisions/adr-*.md` and use them to pre-fill `DESCRIPTION` (from the brief) and `TECH_STACK` (from the accepted ADRs) — confirm with Daniel rather than asking from scratch, and honor any decision marked *deferred*. (If `~/projects/scaffold-drafts` isn't cloned but you expect a draft: `git clone ssh://git@forgejo.towneygorm.cc:222/daniel/scaffold-drafts.git ~/projects/scaffold-drafts` then `git -C ~/projects/scaffold-drafts pull`.) Remember the slug — **Step 6.7** ports the draft into dev-hub and removes it from the drafts repo. If no draft exists, gather inputs as below.
+**First, check for a staging draft from the ideation skills.** Drafts live in the Forgejo-backed repo `daniel/scaffold-drafts`, cloned at `~/projects/scaffold-drafts`. If `~/projects/scaffold-drafts/<slug>/` exists, read its `concept-brief.md` and/or `decisions/adr-*.md` and use them to pre-fill `DESCRIPTION` (from the brief) and `TECH_STACK` (from the accepted ADRs) — confirm with Daniel rather than asking from scratch, and honor any decision marked *deferred*. (If `~/projects/scaffold-drafts` isn't cloned but you expect a draft: `git clone ssh://git@forgejo.towneygorm.cc:222/daniel/scaffold-drafts.git ~/projects/scaffold-drafts` then `git -C ~/projects/scaffold-drafts pull`.) Remember the slug — **Step 6.5** ports the draft into the new repo's `docs/` and removes it from the drafts repo. If no draft exists, gather inputs as below.
 
 Ask Daniel for:
 
@@ -149,13 +125,21 @@ mkdir -p ~/projects/${SLUG}/.claude/agents \
          ~/projects/${SLUG}/.claude/skills \
          ~/projects/${SLUG}/.claude/rules \
          ~/projects/${SLUG}/.forgejo/workflows \
+         ~/projects/${SLUG}/docs/superpowers/specs \
+         ~/projects/${SLUG}/docs/superpowers/plans \
+         ~/projects/${SLUG}/docs/decisions \
          ~/projects/${SLUG}/src
+# keep the docs/ tree in git even before it has content
+touch ~/projects/${SLUG}/docs/superpowers/specs/.gitkeep \
+      ~/projects/${SLUG}/docs/superpowers/plans/.gitkeep \
+      ~/projects/${SLUG}/docs/decisions/.gitkeep
 ```
 
-> Ideation drafts are **not** copied into the project's `docs/`. They are ported
-> into dev-hub (plan + thoughts) and removed from the drafts repo in **Step 6.7**,
-> after the project is registered in dev-hub. The repo gets only a one-line
-> pointer in `CLAUDE.md` (also Step 6.7).
+The `docs/` tree is where design docs, plans, and ADRs live (the CLAUDE.md
+"Design & plans" section documents the convention). If Step 1 found an ideation
+draft, **Step 6.5** copies its concept brief + ADRs into this tree and then
+removes the `<slug>` folder from the `scaffold-drafts` repo — so a folder there
+always means *an idea not yet built*.
 
 ---
 
@@ -235,102 +219,65 @@ git push -u origin main
 
 ---
 
-## Step 6.5 — Kick dev-hub project discovery
+## Step 6.5 — Port ideation draft into the repo (only if a draft was used)
 
-After the new project directory exists on vm-160 (post Step 4) and git
-init has run (post Step 6), nudge dev-hub to scan for it so it appears
-in the dashboard immediately instead of waiting for the next periodic
-scan.
+If Step 1 found a draft at `~/projects/scaffold-drafts/<slug>/`, copy the thinking into
+the new repo's `docs/` tree now — **this is the canonical home for the rationale after
+build** — then retire the draft.
 
-```bash
-curl -sS -X POST http://localhost:8010/api/v1/projects/refresh || true
-```
+The delete is gated on success — **never remove the draft until the copy is committed
+and pushed**, or you'll lose the ideation with nowhere to read it.
 
-Non-fatal (`|| true`) — if dev-hub is down at create time, the project
-will appear on the next periodic scan anyway.
-
-After the call, look up the new project's id by querying the dev-hub REST API:
-
-```bash
-DEV_HUB_ID=$(curl -sS http://localhost:8010/api/v1/projects \
-  | python3 -c "import json,sys; d=json.load(sys.stdin)['data']; items=d.get('items') or d; ids=[p['id'] for p in items if p['slug']==sys.argv[1]]; print(ids[0] if ids else '')" "$SLUG")
-```
-
-`DEV_HUB_ID` may be empty (dev-hub was down, or the project's path is
-outside the REPOS mount). Step 9 writes whatever you got, including
-empty.
-
----
-
-## Step 6.7 — Port ideation draft into dev-hub (only if a draft was used)
-
-If Step 1 found a draft at `~/projects/scaffold-drafts/<slug>/`, port the thinking
-into the dev-hub dashboard now (the project exists in dev-hub after Step 6.5), then
-retire the draft. **This is the canonical home for the rationale after build** — the
-project repo gets only a pointer, not copied markdown.
-
-Order matters and the delete is gated on success — **never remove the draft until the
-dev-hub writes have succeeded**, or you'll lose the ideation with nowhere to read it.
-
-1. **ADRs → a dev-hub plan**, linked to the project. Concatenate the `decisions/adr-*.md`
-   bodies into one plan body and call (via the dev-hub MCP):
+1. **ADRs → `docs/decisions/`.** Copy each `decisions/adr-*.md` across verbatim:
+   ```bash
+   cp ~/projects/scaffold-drafts/${SLUG}/decisions/adr-*.md ~/projects/${SLUG}/docs/decisions/ 2>/dev/null || true
    ```
-   create_plan(
-     project_slug=<slug>,
-     title="Architecture decisions (from ideation)",
-     body_md=<concatenated ADRs>,
-   )
+2. **Concept brief → `docs/`.** Copy the brief so it stays readable alongside the code:
+   ```bash
+   cp ~/projects/scaffold-drafts/${SLUG}/concept-brief.md ~/projects/${SLUG}/docs/ 2>/dev/null || true
    ```
-2. **Concept brief → dev-hub thoughts.** Seed the brief's key points as typed thoughts —
-   one per salient line — so they're searchable in the dashboard:
+3. **Pointer in CLAUDE.md.** Under the "Design & plans" section, note where the rationale
+   now lives, e.g. append:
+   `> Ideation: see \`docs/concept-brief.md\` and the ADRs in \`docs/decisions/\`.`
+4. **Commit + push** the ported docs with the project's git:
+   ```bash
+   cd ~/projects/${SLUG}
+   git add docs/ CLAUDE.md
+   git commit -m "docs: port ideation (brief + ADRs) from scaffold-drafts"
+   git push
    ```
-   create_thought(project_slug=<slug>, text=<...>, kind=decision|concern|question|idea|note)
-   ```
-   Map: settled choices → `decision`; open questions → `question`; constraints/risks → `concern`.
-   Keep it to the handful that matter; don't transcribe the whole brief.
-3. **Pointer in CLAUDE.md.** Append a line to `~/projects/${SLUG}/CLAUDE.md`:
-   `> Ideation: see the "Architecture decisions (from ideation)" plan + thoughts in dev-hub.`
-   Commit it with the project's git (or fold into the Step 6 commit if you reorder).
-4. **Only after 1–3 succeed**, remove the draft from the drafts repo and push:
+5. **Only after 4 succeeds**, remove the draft from the drafts repo and push:
    ```bash
    cd ~/projects/scaffold-drafts
-   git rm -r <slug>/
-   git commit -m "scaffold(<slug>): ported to dev-hub, project created"
+   git rm -r ${SLUG}/
+   git commit -m "scaffold(${SLUG}): ported to repo docs/, project created"
    git push
    ```
 
-If the dev-hub MCP is unreachable, **skip this step** — leave the draft in
-`scaffold-drafts` untouched and tell Daniel the port is pending so he can re-run it
-later. A draft folder remaining means "not yet ported," which is the safe state.
+If anything in 1–4 fails, **skip the delete** — leave the draft in `scaffold-drafts`
+untouched and tell Daniel the port is pending so he can re-run it later. A draft folder
+remaining means "not yet ported," which is the safe state.
 
 ---
 
 ## Step 6.6 — (Conditional) dev-backend override
 
-**Most projects need nothing here.** With no override, the dev-hub plugin's MCP
-points at the **prod** dev-hub (`http://192.168.86.160:8011/mcp`) — correct,
-since the project's tracking lives in prod. Leave it alone for normal projects.
+**Most projects need nothing here.** Only set this up when the project is itself a
+dev/prod-split service that gets *developed against its own dev backend*. The pattern is
+**coordinate-as-config**: express the backend URL in code as an env var with a
+**prod-safe default**, then override it to the dev coordinate per-repo via `direnv`:
 
-**Only** scaffold an override when the project is itself a dev/prod-split service
-that gets *developed against its own dev backend* (the way dev-hub is). For that
-case, the in-repo session should target the dev instance via a per-repo env var
-read at session launch — set up with `direnv`:
-
-1. Write a tracked `.envrc` at the repo root exporting the dev coordinate, e.g.
-   `export DEV_HUB_MCP_URL=http://192.168.86.160:8001/mcp` (dev dev-hub) — or the
-   project's own `*_MCP_URL` if it ships its own MCP.
+1. Write a tracked `.envrc` at the repo root exporting the dev coordinate — the
+   project's own `*_URL` pointing at its dev instance, e.g.
+   `export ${SLUG}_API_URL=http://192.168.86.160:<dev-port>`.
 2. Ensure direnv is set up on vm-160 (one-time, already done as of 2026-05-30):
    static binary in `~/.local/bin`, `eval "$(direnv hook bash)"` in `~/.bashrc`.
 3. `ssh … daniel@192.168.86.160 "cd ~/projects/${SLUG} && ~/.local/bin/direnv allow ."`
 
-The env var is read by Claude at launch, so `claude` must be started from a shell
-that has entered the repo (direnv prints `loading …/.envrc`). Do **not** leave a
-duplicate project-local `.claude.json` MCP server — the plugin + this override is
-the single connection.
-
-> The broader question of which dev tooling should be project-local (copied from
-> this catalogue) vs shared via the `claude-resources` marketplace is a separate,
-> still-open design decision — see the claude-resources lifecycle spec.
+The env var is read at session launch, so `claude` must be started from a shell that has
+entered the repo (direnv prints `loading …/.envrc`). Prod is the default everyone gets;
+dev is the deliberate per-repo override. See the `claude-resources` `project-lifecycle`
+skill for the full rationale.
 
 ---
 
