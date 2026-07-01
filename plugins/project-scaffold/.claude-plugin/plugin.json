@@ -1,6 +1,6 @@
 {
   "name": "project-scaffold",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Scaffold a new development project on vm-160: Forgejo repo, CLAUDE.md + .claude/ from the catalogue, git init/push, and an optional prod stack. Plus promote-skill to share project-authored skills into the central library.",
   "author": { "name": "Daniel McGeevers", "email": "dmcg2448@gmail.com" },
   "homepage": "https://forgejo.towneygorm.cc/daniel/claude-resources",

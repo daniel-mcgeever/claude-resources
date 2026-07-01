@@ -1,7 +1,8 @@
-# Environment — never commit
+# Environment & secrets — never commit
 .env
 .env.local
 .env.*.local
+.forgejo-token
 
 # Python
 __pycache__/
