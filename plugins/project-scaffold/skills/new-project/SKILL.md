@@ -24,7 +24,7 @@ reference. Don't stand up a per-app database/bucket/IdP unless an ADR records a 
 ## Prerequisites
 
 - You are running on **vm-160** (the dev host) in any Claude session with this plugin installed.
-- The tooling secrets file exists: `~/projects/claude-resources/.env` (mode 600, gitignored) with `FORGEJO_API_TOKEN` and `REGISTRY_PASSWORD`. If missing, halt and tell Daniel to stage it (see the project-scaffold README).
+- The tooling secrets file exists: `~/projects/claude-resources/.env` (mode 600, gitignored) with `FORGEJO_API_TOKEN` and `REGISTRY_PASSWORD`. If missing, halt and tell Daniel to stage it (see the project-scaffold README). It optionally also carries `FORGEJO_MINT_USER` + `FORGEJO_MINT_PASSWORD` (the scaffold-bot service account) — **Step 4.5** uses them to auto-provision each repo's `.forgejo-token`; if absent, that step skips gracefully.
 
 ### One-time secret setup (if `~/projects/claude-resources/.env` is missing)
 
@@ -45,6 +45,23 @@ REGISTRY_PASSWORD=<password>
 
 Set file permissions to `chmod 600 ~/projects/claude-resources/.env` and confirm
 it is gitignored before proceeding.
+
+### One-time setup (optional): scaffold-bot issue-token minter
+
+**Step 4.5** gives every new repo its own repo-scoped `.forgejo-token` (read+write on
+that repo's code and issues) so the `forgejo-issues` skill works from day one. Minting a
+token requires **basic auth** — a token can't mint tokens, and Daniel's Forgejo login is
+via Authentik (OIDC), which has no local password. So minting is done by a dedicated
+**Forgejo service account with a local password**, `scaffold-bot`:
+
+1. In Forgejo, create the `scaffold-bot` account with a **local password** (not OIDC) and
+   make it a **site admin** — that lets it mint a `daniel`-owned, repo-scoped token via the
+   `Sudo: daniel` header (Step 4.5's path). Store its creds in the vault as the
+   `homelab/forgejo-scaffold-bot` item.
+2. Add `FORGEJO_MINT_USER` / `FORGEJO_MINT_PASSWORD` to the one-time `.env` bootstrap (see
+   the project-scaffold README — the same vm-153 `bw get … | ssh` flow, values never printed).
+3. That's it — one-time. Every future scaffold then provisions `.forgejo-token`
+   automatically. Leave the vars unset and Step 4.5 simply skips (projects still scaffold).
 
 ---
 
@@ -140,6 +157,54 @@ The `docs/` tree is where design docs, plans, and ADRs live (the CLAUDE.md
 draft, **Step 6.5** copies its concept brief + ADRs into this tree and then
 removes the `<slug>` folder from the `scaffold-drafts` repo — so a folder there
 always means *an idea not yet built*.
+
+---
+
+## Step 4.5 — Provision the repo-scoped issue token → .forgejo-token
+
+Give the new repo its own **repo-scoped** Forgejo token (read+write on this repo's code
+and issues), written to the gitignored `~/projects/${SLUG}/.forgejo-token` — this is what
+the `forgejo-issues` skill uses to manage issues/milestones. It's minted by the
+`scaffold-bot` service account (see Prerequisites → one-time setup). The step **verifies
+the minted token before trusting it** and **skips gracefully** if `FORGEJO_MINT_*` isn't
+staged, so it never blocks a scaffold and never writes a broken token.
+
+```bash
+ENVF=~/projects/claude-resources/.env
+MUSER=$(grep -E '^FORGEJO_MINT_USER=' "$ENVF" | cut -d= -f2-)
+MPASS=$(grep -E '^FORGEJO_MINT_PASSWORD=' "$ENVF" | cut -d= -f2-)
+if [ -z "$MUSER" ] || [ -z "$MPASS" ]; then
+  echo "NOTE: FORGEJO_MINT_* not staged — skipping .forgejo-token (see Prerequisites)."
+else
+  FJ=https://forgejo.towneygorm.cc/api/v1
+  UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
+  # Mint a daniel-owned token restricted to THIS repo (scaffold-bot is a site admin → Sudo).
+  # Never print $MPASS or the returned sha1.
+  BODY=$(python3 -c 'import json,sys; print(json.dumps({"name":sys.argv[1]+"-issues","repositories":[sys.argv[1]],"scopes":["write:repository","write:issue"]}))' "$SLUG")
+  SHA1=$(curl -s -A "$UA" -u "${MUSER}:${MPASS}" -H "Sudo: daniel" \
+         -H "Content-Type: application/json" -d "$BODY" "${FJ}/users/daniel/tokens" \
+         | python3 -c 'import json,sys
+try: print(json.load(sys.stdin).get("sha1",""))
+except Exception: print("")')
+  unset MPASS
+  # Verify BEFORE trusting it: the token must actually read this repo's issues.
+  if [ -n "$SHA1" ] && [ "$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" \
+        -H "Authorization: token $SHA1" "${FJ}/repos/daniel/${SLUG}/issues?limit=1")" = "200" ]; then
+    printf '%s' "$SHA1" > ~/projects/${SLUG}/.forgejo-token
+    chmod 600 ~/projects/${SLUG}/.forgejo-token
+    echo "✅ .forgejo-token provisioned (repo-scoped: read+write repo+issues)"
+  else
+    echo "⚠️  mint/verify failed — NOT writing a token. Confirm scaffold-bot is a site admin"
+    echo "    (Sudo path) or has write access to daniel/${SLUG}; scaffold continues regardless."
+  fi
+  unset SHA1
+fi
+```
+
+- `.forgejo-token` is excluded by the catalogue `.gitignore` (written in Step 5, before
+  Step 6's `git add`), so it is never committed.
+- Token name `${SLUG}-issues` is unique per repo; re-running new-project against an existing
+  repo would `400` on the duplicate name — harmless (a working token already exists).
 
 ---
 

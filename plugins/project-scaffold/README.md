@@ -20,20 +20,34 @@ The scaffolder reads `~/projects/claude-resources/.env` (mode 600, gitignored) f
 
 - `FORGEJO_API_TOKEN` — Forgejo API token with scopes `write:repository` **and** `write:user`
 - `REGISTRY_PASSWORD` — registry machine password (used to set the per-repo CI secret)
+- `FORGEJO_MINT_USER` / `FORGEJO_MINT_PASSWORD` — the **scaffold-bot** service account
+  (local-password login, **not** Authentik/OIDC). `new-project` Step 4.5 uses it to mint each
+  new repo's repo-scoped `.forgejo-token`. scaffold-bot must be a Forgejo **site admin** (so it
+  can mint a `daniel`-owned token via the `Sudo` header). Optional — absent, Step 4.5 just skips.
 
 Stage it from the vm-153 vault (run **on vm-153**), piping the values into the file
-over SSH stdin so they never print to a transcript:
+over SSH stdin so they never print to a transcript. This is a **one-time** setup; once
+staged, every future scaffold provisions its `.forgejo-token` automatically with no
+per-project steps:
 
 ```bash
 export BW_SESSION=$(cat /dev/shm/bw-session-$USER)
 TOKEN=$(bw get password "homelab/forgejo-api-token")
 REGPW=$(bw get item "homelab/registry" \
   | python3 -c 'import sys,json; d=json.load(sys.stdin); print([f["value"] for f in d.get("fields",[]) if f["name"]=="machine_password"][0])')
+# scaffold-bot login item (adjust the two lines if you stored it as a secure note / custom fields):
+MINTU=$(bw get username "homelab/forgejo-scaffold-bot")
+MINTP=$(bw get password "homelab/forgejo-scaffold-bot")
 unset BW_SESSION
-printf '%s\n' "FORGEJO_API_USER=homelab-agent" "FORGEJO_API_TOKEN=${TOKEN}" "REGISTRY_PASSWORD=${REGPW}" \
+printf '%s\n' \
+  "FORGEJO_API_USER=homelab-agent" \
+  "FORGEJO_API_TOKEN=${TOKEN}" \
+  "REGISTRY_PASSWORD=${REGPW}" \
+  "FORGEJO_MINT_USER=${MINTU}" \
+  "FORGEJO_MINT_PASSWORD=${MINTP}" \
   | ssh -i ~/.ssh/id_ed25519_homelab_agent_vm-160 daniel@192.168.86.160 \
     "umask 077; mkdir -p ~/projects/claude-resources; cat > ~/projects/claude-resources/.env; chmod 600 ~/projects/claude-resources/.env"
-unset TOKEN REGPW
+unset TOKEN REGPW MINTU MINTP
 ```
 
 Never commit `.env`; never print the values.
