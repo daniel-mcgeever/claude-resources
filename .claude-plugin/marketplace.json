@@ -15,6 +15,17 @@
       "name": "project-scaffold",
       "source": "./plugins/project-scaffold",
       "description": "Scaffold a new development project on vm-160 (Forgejo repo + .claude/ from catalogue), plus promote-skill for sharing skills into the central library."
+    },
+    {
+      "name": "mattpocock-skills",
+      "source": {
+        "source": "github",
+        "repo": "mattpocock/skills"
+      },
+      "description": "Matt Pocock's engineering skills — grilling sessions, TDD, triage, codebase architecture, and PRD workflows for coding agents.",
+      "author": {
+        "name": "Matt Pocock"
+      }
     }
   ]
 }
