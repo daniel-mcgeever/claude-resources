@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "dev-hub": {
-      "type": "http",
-      "url": "${DEV_HUB_MCP_URL:-http://192.168.86.160:8011/mcp}"
-    }
-  }
-}

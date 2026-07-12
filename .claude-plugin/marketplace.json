@@ -7,11 +7,6 @@
   "description": "Central marketplace for Daniel's Claude Code resources across the homelab VMs: plugins + shared cross-project skills.",
   "plugins": [
     {
-      "name": "dev-hub",
-      "source": "./plugins/dev-hub",
-      "description": "Claude Code plugin for dev-hub: MCP connection + workflow skills for picking up dev-hub-tracked work in any consumer repo."
-    },
-    {
       "name": "project-scaffold",
       "source": "./plugins/project-scaffold",
       "description": "Scaffold a new development project on vm-160 (Forgejo repo + .claude/ from catalogue), plus promote-skill for sharing skills into the central library."

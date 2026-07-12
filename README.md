@@ -8,7 +8,7 @@ and (later) shared cross-project skills under `shared/`.
 
 ```bash
 claude plugin marketplace add https://forgejo.towneygorm.cc/daniel/claude-resources.git --scope user
-claude plugin install dev-hub@claude-resources --scope user
+claude plugin install project-scaffold@claude-resources --scope user
 ```
 
 Restart Claude Code (or start a new session) to load the plugin.
@@ -25,6 +25,3 @@ claude plugin marketplace add ~/projects/claude-resources --scope local
 Skill edits are picked up live; for command/hook/MCP/plugin.json changes run
 `/reload-plugins`. Consumers stay pinned to the git-URL install and see nothing
 until you merge to `main` and they run `claude plugin update`.
-
-See `docs/superpowers/specs/2026-05-30-claude-resources-lifecycle-design.md`
-in the dev-hub repo for the full lifecycle.
