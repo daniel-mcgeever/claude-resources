@@ -21,6 +21,18 @@
       "author": {
         "name": "Matt Pocock"
       }
+    },
+    {
+      "name": "tender-framework",
+      "source": {
+        "source": "github",
+        "repo": "daniel-mcgeever/tender-framework"
+      },
+      "description": "UCD tender production framework — route selection, scaffold, works-requirement/pricing formation, render & QA. Config as data: invariants, selection, routes, framework identities.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Daniel McGeevers"
+      }
     }
   ]
 }
