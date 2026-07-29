@@ -37,8 +37,8 @@
     {
       "name": "tandoor",
       "source": "./plugins/tandoor",
-      "description": "Tandoor Recipes tools over the Authentik-authenticated MCP gateway, plus a tandoor-agent that follows the curated food-vocabulary conventions and treats food merges as approval-gated.",
-      "version": "0.1.0",
+      "description": "Tandoor Recipes tools over the Authentik-authenticated MCP gateway, plus a tandoor-agent and two skills: canonicalising the food vocabulary (merges are destructive and approval-gated) and adding recipes without polluting it.",
+      "version": "0.2.0",
       "author": {
         "name": "Daniel McGeevers"
       }
