@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "tandoor": {
+      "type": "http",
+      "url": "https://mcp.towneygorm.cc/tandoor"
+    }
+  }
+}

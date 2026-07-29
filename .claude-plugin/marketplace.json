@@ -17,7 +17,7 @@
         "source": "github",
         "repo": "mattpocock/skills"
       },
-      "description": "Matt Pocock's engineering skills — grilling sessions, TDD, triage, codebase architecture, and PRD workflows for coding agents.",
+      "description": "Matt Pocock's engineering skills \u2014 grilling sessions, TDD, triage, codebase architecture, and PRD workflows for coding agents.",
       "author": {
         "name": "Matt Pocock"
       }
@@ -28,8 +28,17 @@
         "source": "github",
         "repo": "daniel-mcgeever/tender-framework"
       },
-      "description": "UCD tender production framework — route selection, scaffold, works-requirement/pricing formation, render & QA. Config as data: invariants, selection, routes, framework identities.",
+      "description": "UCD tender production framework \u2014 route selection, scaffold, works-requirement/pricing formation, render & QA. Config as data: invariants, selection, routes, framework identities.",
       "version": "1.0.0",
+      "author": {
+        "name": "Daniel McGeevers"
+      }
+    },
+    {
+      "name": "tandoor",
+      "source": "./plugins/tandoor",
+      "description": "Tandoor Recipes tools over the Authentik-authenticated MCP gateway, plus a tandoor-agent that follows the curated food-vocabulary conventions and treats food merges as approval-gated.",
+      "version": "0.1.0",
       "author": {
         "name": "Daniel McGeevers"
       }

@@ -1,0 +1,13 @@
+{
+  "name": "tandoor",
+  "version": "0.1.0",
+  "description": "Tandoor Recipes for Claude Code: recipe and shopping-list tools over the Authentik-authenticated MCP gateway, plus a tandoor-agent that knows the curated food-vocabulary conventions.",
+  "author": {
+    "name": "Daniel McGeevers",
+    "email": "dmcg2448@gmail.com"
+  },
+  "homepage": "https://forgejo.towneygorm.cc/daniel/claude-resources",
+  "repository": "https://forgejo.towneygorm.cc/daniel/claude-resources",
+  "license": "UNLICENSED",
+  "keywords": ["tandoor", "recipes", "meal-planning", "shopping-list", "mcp", "authentik"]
+}
