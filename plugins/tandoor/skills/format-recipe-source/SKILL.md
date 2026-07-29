@@ -48,7 +48,19 @@ servings       a number, or leave it out — see below
 ingredient_lines[]  verbatim text, one per line, in source order
 steps[]        the method, one instruction per step
 source_url     webpage_url for a video; the book and page for a scan
+image_url      thumbnail from tandoor_media_fetch, when there is one
+keywords       existing ones only, e.g. Main / Chicken / Vegetarian
+working_time   active minutes, if the source says
+waiting_time   passive minutes — baking, resting, marinating
 ```
+
+Pass `image_url` straight through to `add-recipe-cleanly`: it is downloaded and
+stored at creation time, because social-media thumbnail URLs are signed and expire
+within days, so a stored URL yields a recipe whose picture vanishes with no error.
+
+Keywords are matched against the existing curated tree and unknown ones are
+reported rather than created — so prefer the tags already in use over inventing a
+new vocabulary.
 
 Keep section headings (`For the sauce:`, `To serve`) as their own ingredient
 lines. They're structure, and the next skill turns them into headers.

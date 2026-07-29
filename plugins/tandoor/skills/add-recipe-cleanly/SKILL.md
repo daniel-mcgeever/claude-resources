@@ -25,8 +25,23 @@ the existing food where there is one. Search on the **head noun**, not the full
 phrase: searching `garlic` finds `Garlic`; searching `2 cloves garlic, minced`
 finds nothing and tempts you into creating it.
 
-Do the same for units. If the recipe says `tbsp` and the instance already uses
-`tablespoon`, use the existing one.
+`tandoor_food_search` reports a total `count`, and sets `truncated` with a
+`next_offset` when there is more. **Do not treat a truncated page as the whole
+vocabulary** — a slice that happens to end at `Yogurt` looks complete, and
+believing it means creating a duplicate of everything past the cutoff.
+
+Do the same for units with `tandoor_unit_search`. If the recipe says `tbsp` and
+the instance already uses `tablespoon`, use the existing one.
+
+**Units rot the same way foods do, and the damage is quieter.** They are
+get-or-created from ingredient names with no confirmation, they have no aisle to
+make a new one look obviously unfinished, and a duplicate silently loses
+conversion. Check `base_unit`: `lb` carries base_unit `pound` and converts, so
+creating a separate `pound` produces a unit that converts to nothing. The live
+instance already carries `grams` beside `g`, `pound` beside `lb`, and junk like
+`–30` left by range parsing. `tandoor_unit_merge` fixes duplicates — merge into
+the one that has a `base_unit` — but it is destructive, so confirm the direction
+first.
 
 ## Step 2 — split each ingredient line into its parts
 
@@ -54,12 +69,30 @@ Only create a food when the search genuinely found nothing. Then:
 - **Natural English word order** — `Dried Basil`, not `Basil dried`.
 - **Title Case**, singular unless it's a mass noun (`Oats` stays plural).
 - **No quantities, bullets, prose or trailing punctuation** in the name.
-- Add a **supermarket aisle** if you can, or the food drops out of aisle-grouped
-  shopping lists.
+- Add a **supermarket aisle** by passing it on the food itself —
+  `{"name": "Hot Sauce", "aisle": "Condiments and Sauces"}`. Without one the food
+  drops out of aisle-grouped shopping lists. It is applied only to foods this call
+  actually creates, so an existing curated aisle is never overwritten.
 
 ## Step 4 — check afterwards
 
-After creating, `tandoor_food_search` for anything suspicious — names containing
-digits, starting with punctuation, or longer than a few words. Those are the
-signature of a mis-split ingredient line, and they are much cheaper to fix now
-than after they have spread across other recipes.
+`tandoor_recipe_create` returns a **`created: {foods, units}`** block naming
+exactly what it added to the vocabulary, and `aisles` saying which aisles were
+set. Read it. That is the whole check — you do not need to infer newness from null
+aisles or high ids.
+
+If `created` is non-empty, confirm each addition was genuinely intended and that
+none is a near-duplicate of something that already existed under a different
+spelling. `created.units` deserves the closer look, for the reasons in step 1.
+
+## Payload shape
+
+`food` and `unit` accept a bare string or `{"name": ...}`; omit either where the
+line genuinely has none. Omitted `amount` is 0, and fractions may be `"1/2"` or
+`0.5`. A section heading is `is_header: true` with its text in `note` and no food.
+
+**Never reshape real data to satisfy the API.** If something is rejected, the fix
+is in the payload, never in the recipe: don't drop a section header to avoid an
+error, and above all don't invent a unit like `piece` for a line that has none —
+that is exactly the pollution this skill exists to prevent. Rejections name the
+offending ingredient, so fix that line and resend.

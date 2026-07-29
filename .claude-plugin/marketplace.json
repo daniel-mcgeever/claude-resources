@@ -38,7 +38,7 @@
       "name": "tandoor",
       "source": "./plugins/tandoor",
       "description": "Tandoor Recipes tools over the Authentik-authenticated MCP gateway, plus a tandoor-agent and three skills: capturing a recipe from a video link, PDF or photo of a cookbook page, canonicalising the food vocabulary (merges are destructive and approval-gated), and adding recipes without polluting it.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "author": {
         "name": "Daniel McGeevers"
       }
