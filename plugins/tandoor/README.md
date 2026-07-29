@@ -11,6 +11,10 @@ plus an agent that understands the curated food-vocabulary conventions.
 - **`tandoor-agent`**, which knows the vocabulary rules (natural word order,
   Title Case, preserved qualifiers) and treats food merges as destructive
   operations that need approval first.
+- **Recipe capture from any source** — paste an Instagram Reel or TikTok link, a
+  PDF, a photo of a cookbook page, or a photo of a handwritten card, and
+  `format-recipe-source` turns it into a draft that `add-recipe-cleanly` files
+  without polluting the food vocabulary.
 
 ## Install
 
@@ -29,7 +33,7 @@ filtered per user, so a missing tool means "not authorised", not "broken".
 
 | Group | Tools |
 |---|---|
-| `tandoor-users` | `food_search`, `recipe_search`, `recipe_get`, `shopping_list` |
+| `tandoor-users` | `food_search`, `recipe_search`, `recipe_get`, `shopping_list`, `media_fetch` |
 | `tandoor-admins` | the above plus `food_merge`, `automation_create`, `recipe_create` |
 
 Membership of `mcp-users` is required to reach the gateway at all — it is the
