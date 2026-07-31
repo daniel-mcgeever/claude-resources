@@ -62,8 +62,10 @@ Keywords are matched against the existing curated tree and unknown ones are
 reported rather than created — so prefer the tags already in use over inventing a
 new vocabulary.
 
-Keep section headings (`For the sauce:`, `To serve`) as their own ingredient
-lines. They're structure, and the next skill turns them into headers.
+Keep section headings (`For the sauce:`, `To serve`) as structure, not as
+ingredients. Where a section maps cleanly onto its own step, it becomes that
+step's `name`; where it doesn't, it becomes a header row. Either way the next
+skill places it — just don't lose it, and never let it become a food.
 
 ## Step 3 — do not invent anything
 
