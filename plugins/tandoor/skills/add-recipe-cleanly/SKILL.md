@@ -3,6 +3,8 @@ name: add-recipe-cleanly
 description: "Create a recipe in Tandoor without polluting the food vocabulary. Creating a recipe silently get-or-creates a Food and a Unit for every ingredient name, so careless names permanently add junk entries. Covers checking for existing foods first, naming conventions, and what belongs in the note field. Triggers: 'add a recipe', 'create a recipe in tandoor', 'save this recipe', 'import this recipe'."
 ---
 
+<!-- plugin: tandoor 0.6.0 -->
+
 # Skill: add-recipe-cleanly
 
 Requires the `tandoor-admins` group. If `tandoor_recipe_create` isn't in your
@@ -41,11 +43,25 @@ the instance already uses `tablespoon`, use the existing one.
 get-or-created from ingredient names with no confirmation, they have no aisle to
 make a new one look obviously unfinished, and a duplicate silently loses
 conversion. Check `base_unit`: `lb` carries base_unit `pound` and converts, so
-creating a separate `pound` produces a unit that converts to nothing. The live
-instance already carries `grams` beside `g`, `pound` beside `lb`, and junk like
-`–30` left by range parsing. `tandoor_unit_merge` fixes duplicates — merge into
-the one that has a `base_unit` — but it is destructive, so confirm the direction
-first.
+creating a separate `pound` produces a unit that converts to nothing. This is not
+hypothetical — `tablespoon` and `teaspoon` existed for a long time beside `tbsp`
+and `tsp`, carrying no `base_unit` between them, and 146 ingredient rows across
+the library converted to nothing as a result.
+
+`tandoor_unit_merge` fixes duplicates — merge **into** the one that has a
+`base_unit`, since that is the one that converts. It repoints every ingredient
+before deleting the source, so it repairs the recipes as it goes. It is
+destructive and there is no undo, so confirm the direction first.
+
+**Counting is a unit: `no.`** — `1 no. Yellow Onion`, `10 no. Tortilla`. It is the
+single sanctioned unit for countable items. It keeps the amount column even and
+it does not pluralise awkwardly.
+
+That is not a licence to invent units. The rule is: **one convention, applied
+everywhere.** `piece`, `whole`, `onion`, `jalapeno` as units are the pollution
+this skill exists to prevent, and half a library one way and half the other is
+worse than either alone. `no.` is the exception because it is established and
+named here; nothing else is.
 
 ## Step 2 — split each ingredient line into its parts
 
@@ -120,14 +136,53 @@ error, and above all don't invent a unit like `piece` for a line that has none �
 that is exactly the pollution this skill exists to prevent. Rejections name the
 offending ingredient, so fix that line and resend.
 
-## Fixing what already exists
+## Revising a recipe — never delete and recreate
 
-Nothing here is one-shot any more, so a near-miss does not need re-creating:
+Iterating on a recipe with someone is the normal case. The first import is rarely
+the final one, and **`tandoor_recipe_update` edits in place, steps included.**
 
-- `tandoor_recipe_update` — name, description, servings, source_url, image_url,
-  keywords, times. Steps and ingredients still need a new recipe.
+```
+tandoor_recipe_get(id) → edit the steps array → tandoor_recipe_update(id, steps=[…])
+```
+
+`tandoor_recipe_get` returns steps in exactly the shape `tandoor_recipe_update`
+accepts — `step_id`, `name`, `time`, `order`, `instruction`, `ingredients` — so it
+is a closed loop. Read it, change what's wrong, send it back.
+
+Delete-and-recreate is the wrong instinct and it is expensive: it churns the
+recipe id (breaking meal plans, shopping lists and bookmarks), strands orphaned
+`cookbook_step` rows, and costs a re-fetched thumbnail plus re-applied keywords
+every cycle. One session did it five times for changes that were each a sentence.
+
+**`steps` is the complete new list.** Anything omitted is deleted — so fetch first
+and edit the array you got back, never assemble a partial one. The response
+reports `steps: {before, after}`, and if the count shrank it warns and hands back
+the text of what was removed, so the mistake is recoverable by resending.
+
+Also available:
+
 - `tandoor_food_update` / `tandoor_unit_update` — rename, fix a plural, set an
   aisle, or give a unit the `base_unit` that makes it convert. **Merging is not
   editing**: merge folds a record into another that is already correct; these make
   a record correct.
-- `tandoor_recipe_delete` — destructive, no trash. Prefer updating.
+- `tandoor_recipe_delete` — for a recipe that is *unwanted*. One that is merely
+  wrong is fixed above. Destructive, no trash.
+
+## The guard, and when `force` is the answer
+
+Names that look like un-split ingredient lines are refused before anything is
+written. The guard consults the vocabulary first, so a name that **already
+exists** is never refused — it comes back under `warnings` as a cleanup candidate
+instead. Nothing is blocked, and nothing new is created.
+
+So `force: true` is only ever for a genuinely new name you are sure about. It
+switches the check off for the **whole payload**, which means reaching for it to
+get one established name through would also disable it for the parsing accidents
+sitting alongside.
+
+## Field limits worth knowing
+
+`description` is capped at **512 characters** — a database column, not a
+preference. Keep global provenance there (what the source was, that amounts were
+converted, that servings were inferred) and put step-specific provenance in that
+step's instruction as an italic line. `format-recipe-source` has the split.
