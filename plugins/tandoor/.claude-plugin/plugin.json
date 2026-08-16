@@ -1,6 +1,6 @@
 {
   "name": "tandoor",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Tandoor Recipes for Claude Code: recipe and shopping-list tools over the Authentik-authenticated MCP gateway, recipe capture from video links, PDFs and photos, plus a tandoor-agent that knows the curated food-vocabulary conventions.",
   "author": {
     "name": "Daniel McGeevers",

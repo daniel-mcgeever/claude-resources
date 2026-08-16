@@ -3,7 +3,7 @@ name: add-recipe-cleanly
 description: "Create a recipe in Tandoor without polluting the food vocabulary. Creating a recipe silently get-or-creates a Food and a Unit for every ingredient name, so careless names permanently add junk entries. Covers checking for existing foods first, naming conventions, and what belongs in the note field. Triggers: 'add a recipe', 'create a recipe in tandoor', 'save this recipe', 'import this recipe'."
 ---
 
-<!-- plugin: tandoor 0.7.0 -->
+<!-- plugin: tandoor 0.8.0 -->
 
 # Skill: add-recipe-cleanly
 
@@ -196,6 +196,7 @@ sitting alongside.
 ## Field limits worth knowing
 
 `description` is capped at **512 characters** — a database column, not a
-preference. Keep global provenance there (what the source was, that amounts were
-converted, that servings were inferred) and put step-specific provenance in that
-step's instruction as an italic line. `format-recipe-source` has the split.
+preference. It is a short blurb about the dish, and it is fine to leave empty.
+Do **not** record importing work there: "converted from cups", "servings
+corrected", "times derived" mean nothing to anyone the recipe is shared with.
+The source lives in `source_url`. `format-recipe-source` has the full rule.
