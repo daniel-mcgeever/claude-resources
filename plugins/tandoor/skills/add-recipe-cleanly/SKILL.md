@@ -3,7 +3,7 @@ name: add-recipe-cleanly
 description: "Create a recipe in Tandoor without polluting the food vocabulary. Creating a recipe silently get-or-creates a Food and a Unit for every ingredient name, so careless names permanently add junk entries. Covers checking for existing foods first, naming conventions, and what belongs in the note field. Triggers: 'add a recipe', 'create a recipe in tandoor', 'save this recipe', 'import this recipe'."
 ---
 
-<!-- plugin: tandoor 0.6.0 -->
+<!-- plugin: tandoor 0.7.0 -->
 
 # Skill: add-recipe-cleanly
 
@@ -146,8 +146,16 @@ tandoor_recipe_get(id) → edit the steps array → tandoor_recipe_update(id, st
 ```
 
 `tandoor_recipe_get` returns steps in exactly the shape `tandoor_recipe_update`
-accepts — `step_id`, `name`, `time`, `order`, `instruction`, `ingredients` — so it
-is a closed loop. Read it, change what's wrong, send it back.
+accepts — `step_id`, `name`, `time`, `order`, `show_ingredients_table`,
+`instruction`, `ingredients` — so it is a closed loop. Read it, change what's
+wrong, send it back.
+
+**Keep `step_id` on every step.** Steps are matched by it: one carrying its id is
+edited in place, one without it is deleted and re-created. Both produce the right
+recipe, so the difference is invisible in the response — but re-creation renumbers
+every step and resets step columns the payload does not mention. That is how
+`show_ingredients_table` reverts to `true` after each rewrite, putting a duplicate
+ingredient table back beside instructions that already carry their quantities.
 
 Delete-and-recreate is the wrong instinct and it is expensive: it churns the
 recipe id (breaking meal plans, shopping lists and bookmarks), strands orphaned
@@ -165,6 +173,11 @@ Also available:
   aisle, or give a unit the `base_unit` that makes it convert. **Merging is not
   editing**: merge folds a record into another that is already correct; these make
   a record correct.
+  Renaming onto a name that already exists is a collision, not an edit — food and
+  unit names are unique per space. `tandoor_food_update` catches it and names the
+  id to merge into, because the answer is almost always that the two are duplicates
+  and the rename was the wrong operation. A rename target with zero uses is
+  invisible in every recipe but still occupies the name.
 - `tandoor_recipe_delete` — for a recipe that is *unwanted*. One that is merely
   wrong is fixed above. Destructive, no trash.
 

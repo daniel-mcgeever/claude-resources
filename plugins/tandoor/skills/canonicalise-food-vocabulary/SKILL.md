@@ -3,7 +3,7 @@ name: canonicalise-food-vocabulary
 description: "Find and merge duplicate foods in Tandoor without losing data or reintroducing the mess. Covers how to spot duplicates, which name survives, why merge direction matters, and pairing every merge with a FOOD_ALIAS so the next import doesn't recreate it. Triggers: 'duplicate foods', 'clean up the food list', 'merge foods', 'the vocabulary is messy', 'onion vs onions', 'canonicalise ingredients'."
 ---
 
-<!-- plugin: tandoor 0.6.0 -->
+<!-- plugin: tandoor 0.7.0 -->
 
 # Skill: canonicalise-food-vocabulary
 

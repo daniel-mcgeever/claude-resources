@@ -3,7 +3,7 @@ name: format-recipe-source
 description: "Turn source material into a recipe ready for Tandoor — an Instagram Reel or TikTok link, a PDF, a photo of a cookbook page, or a photo of a handwritten card. Produces name, servings, ingredient lines and steps, then hands off to add-recipe-cleanly. Triggers: 'make a recipe from this reel', 'this tiktok', 'add this recipe from a link', 'get the recipe out of this photo', 'scan this cookbook page', 'here is a handwritten recipe', 'import this recipe pdf'."
 ---
 
-<!-- plugin: tandoor 0.6.0 -->
+<!-- plugin: tandoor 0.7.0 -->
 
 # Skill: format-recipe-source
 
@@ -112,19 +112,105 @@ The two ways to get this wrong, both of which happened on the same recipe:
 
 Slack is not idleness. Ask what the *food* is waiting for, not what *you* are.
 
-### One bullet per action
+### Every step opens with a headline
 
-Sources write each step as a paragraph. Convert to one bullet per action, and bold
-the times and temperatures. Same words, different shape — and it stays scannable
-at arm's length with messy hands.
+The first line is a single sentence that says what this step *is*, bolded. It is
+the only line someone reads when they glance up mid-cook, so it has to stand alone:
 
-### Timers
+> **Fry the chorizo in oil, set some aside for garnish.**
 
-Give each step with a timed operation a `time` in minutes. It renders as a
-tappable countdown in Tandoor's cooking mode. Where the source gives a range, use
-the **lower bound** and keep the full range in the text: a timer firing at 10 on a
-10-15 minute bake prompts the look you would take anyway, where one firing at 15
-arrives after the decision point.
+Detail goes underneath, one bullet per action, short enough to take in at a glance.
+Not a sentence carrying three ideas — "Add one ladle of hot stock. Stir until
+absorbed." beats a clause about maintaining a gentle simmer while stirring.
+
+### Three step shapes, chosen by how you cook the step
+
+| The step is | Shape | Timer |
+|---|---|---|
+| prep, stovetop, anything you stand over | **A** | no |
+| hands-on, three or more things going in at once | **C** | no |
+| oven, airfryer, unwatched pot, proving, marinating | **E** | yes |
+
+This is one decision, not two: **if it needs a timer it is shape E.** A timer is
+for time you walk away from. A pan you are standing at gets its minutes bolded in
+the text and no countdown, because you are already watching it. A risotto has none.
+
+**A — headline, then bullets**
+
+```
+**Fry the chorizo in a dry pot, set some aside for garnish.**
+
+- Casing off first — it never softens.
+- Medium heat until crisp and the red oil runs.
+- Lift out; **leave all the oil in the pot**.
+```
+
+**C — headline, then what goes in**
+
+```
+**Stir in the peas, parmesan and the last of the stock.**
+
+**In:**
+
+- {{ ingredients[0] }}
+- {{ ingredients[1] }}
+```
+
+**E — headline, then the settings you walk away from**
+
+```
+**Everything into the pot, then leave it to simmer.**
+
+**In:** …
+**Heat:** gentle simmer
+**Time:** **20 min**
+**Done when:** the sweet potato crushes against the side of the pot.
+```
+
+`Done when:` is worth its own line on any long step — a doneness cue is what you
+are actually checking against, and it is different information from an instruction.
+
+Set `show_ingredients_table: false` on every step written this way. The quantities
+are already in the text; the table repeats them.
+
+### Never hard-code a quantity
+
+Step instructions are Jinja2 templates rendered against **that step's own**
+ingredients. A literal `**200 g**` does not scale — double the servings and the
+text still says 200 g while the ingredient list says 400. It is a number that
+quietly lies.
+
+| Write | Renders |
+|---|---|
+| `{{ ingredients[0] }}` | `200 g Chorizo`, scaled and pluralised |
+| `{{ ingredients[0].food }}` | just the name |
+| `{{ scale(150) }}` | any other number, scaled |
+
+Indexes count that step's ingredients from 0, in the order you send them — so
+reordering a step's ingredients shifts every reference in its text. An out-of-range
+index renders as an **empty string with no error**; `tandoor_recipe_create` and
+`tandoor_recipe_update` refuse those before writing, which is the only reason they
+are catchable at all.
+
+**Times and temperatures are the exception.** Doubling a recipe does not double the
+bake, so write `**20 min**` and `**220C**` plainly and never wrap them in `scale()`.
+
+Where the source gives a time range, put the **lower bound** in `time` and keep the
+range in the text: a timer firing at 10 on a 10-15 minute bake prompts the look you
+would take anyway, where one firing at 15 arrives after the decision point.
+
+### Markdown that does not render
+
+Four things look like they should work and silently do not, because Tandoor's
+sanitiser escapes `>` before the markdown parser runs and no extension is loaded
+for the rest:
+
+- **blockquotes** — `> note` renders as literal text
+- **task lists** — `- [ ]` stays literal
+- **strikethrough**, **subscript**, **superscript**
+
+Available: headers, bold, italic, `code`, fenced blocks, tables, `---`, nested
+lists, images, auto-linked URLs. A single newline becomes a line break.
 
 ### Metric, for an Irish kitchen
 
